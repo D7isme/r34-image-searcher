@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hentai Image Founder</title>
+    <title>Hentai Images</title>
     <link
       rel="stylesheet"
       type="text/css"
@@ -77,7 +77,7 @@
         color: black;
         padding: 10px;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         cursor: pointer;
         border: 2px solid black;
         transition: all 0.5s ease;
@@ -100,6 +100,21 @@
       #pageNumber {
         margin: 30px;
         padding: 10px 19px;
+      }
+
+      .dv-container {
+        display: inline-flex !important;
+        justify-content: space-between;
+        align-items: center;
+        margin: 20px 0;
+        width: 100%;
+      }
+      .dv-container a {
+        padding: 10px 15px;
+        cursor: pointer;
+        border: 2px solid black;
+        display: inline-block;
+        text-decoration: none;
       }
     </style>
   </head>
@@ -138,29 +153,29 @@
     <script src="https://unpkg.com/nswfparse/dist/nswfparse.js"></script>
     <script defer>
       if (!localStorage.getItem("recentSearch")) {
-        localStorage.setItem("recentSearch", JSON.stringify([]));
-      }else{
-        document.getElementById("searchTags").value = JSON.parse(localStorage.getItem("recentSearch"))[0] || ""
+        localStorage.setItem("recentSearch", JSON.stringify([""]));
+      } else {
+        document.getElementById("searchTags").value =
+          JSON.parse(localStorage.getItem("recentSearch"))[0] || " ";
       }
 
       function setLocalstorage(tags) {
         const recentSearch = JSON.parse(localStorage.getItem("recentSearch"));
-        if (tags && !recentSearch.includes(tags)) {
-          recentSearch.unshift(tags);
+        if (tags && !recentSearch[0] != tags) {
+          recentSearch.unshift(tags || " ");
         }
         localStorage.setItem("recentSearch", JSON.stringify(recentSearch));
       }
 
       async function renderNew(
-        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || "",
+        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || " ",
         numPage = 1,
         limit = 100,
         random = false
       ) {
         const contentElement = document.getElementById("content");
         contentElement.innerHTML = "";
-        setLocalstorage(tags)
-
+        setLocalstorage(tags);
 
         const options = {
           tags: [tags],
@@ -173,51 +188,70 @@
         await nswfparse
           .r34(options)
           .then(async (payload) => {
-            // console.log("pay", payload);
-            let tostifyMsg = "successfully fetched r34";
+            console.log("pay", payload);
+            let tostifyMsg = `successfully fetched r34 ${options.tags.join(
+              ", "
+            )}`;
             let tostifyBg = "light";
             if (!payload.posts) {
               tostifyMsg = "404 r34";
               tostifyBg = "red";
+
+              renderNew(
+                (tags = [""]),
+                (numPage = 1),
+                (limit = 100),
+                (random = false)
+              );
             }
 
             await payload?.posts?.map((data, key) => {
-              const card = document.createElement("div");
-              card.className = "card";
-
-              const image = document.createElement("img");
-              image.src = data.file_url;
-              image.alt = data.md5;
-              card.appendChild(image);
-
-              const cardBody = document.createElement("div");
-              cardBody.className = "card-body";
-              const title = document.createElement("div");
-              title.className = "card-title";
-              title.textContent = `ID: ${data.id}`;
-              cardBody.appendChild(title);
-
-              const description = document.createElement("div");
-              description.className = "card-description";
-              description.textContent = `Created At: ${data.created_at}`;
-              cardBody.appendChild(description);
-
-              const tags = document.createElement("div");
-              tags.className = "card-tags";
-              const tagsParse = data.tags_parsed.map(
-                (d, i) => `<span class="tagNames">${d}</span>`
-              );
-              tags.innerHTML = tagsParse.join(" ");
-              cardBody.appendChild(tags);
-
-              const score = document.createElement("div");
-              score.className = "card-score";
-              score.textContent = `Score: ${data.score}`;
-              cardBody.appendChild(score);
-
-              card.appendChild(cardBody);
-
-              contentElement.appendChild(card);
+              const card = `<div class="card">
+  ${
+    data.file_url[data.file_url.length - 1] != "4"
+      ? `<img 
+    src="${data.file_url}" 
+    alt="${data.md5}" 
+  />`
+      : `<video style="width:100%;" controls>
+        <source src="${data.file_url}" type="video/mp4">
+        </video>`
+  }
+  <div class="card-body">
+    <div class="card-title">ID: ${data.id}</div>
+    <div class="card-description">Created At: ${new Date(
+      data.created_at
+    ).toLocaleString()}</div>
+    ${
+      data.source.length > 0
+        ? `<a href="${data.source}" target="_blank">Source</a>`
+        : ""
+    }
+    <div class="dv-container">
+    <a 
+      class="view-btn"
+      href="${data.file_url}"
+      target="_blank"
+    >View</a>
+    <a 
+      class="download-btn"
+      download="${data.file_url}"
+      onclick="downloadImage(this)"
+      disable="false"
+    >
+      Download
+    </a></div>
+    <div class="card-tags">
+      <span class="tagNames">hi</span>
+      ${data.tags_parsed
+        .map((d, i) => `<span class="tagNames">${d}</span>`)
+        .join(" ")}
+    </div>
+    <div class="card-score">Score: ${data.score}</div>
+  </div>
+</div>
+`;
+              contentElement.insertAdjacentHTML("beforeEnd", card);
             });
 
             document.querySelectorAll("span").forEach((e) => {
@@ -253,6 +287,7 @@
           })
           .catch((error) => {
             console.error(error);
+
             Toastify({
               text: error,
               duration: 3000,
@@ -283,6 +318,54 @@
           (random = false)
         );
       });
+
+      async function downloadImage(e) {
+        try {
+          if (e.getAttribute("disable") == "true") {
+            return;
+          }
+          console.log(e.download);
+
+          const filename = await e.download;
+          e.setAttribute("disable", true);
+          e.innerText = "Loading...";
+
+          const proxyUrl =
+            await `https://api.allorigins.win/raw?url=${encodeURIComponent(
+              e.download
+            )}`;
+          const img = await new Image();
+          img.crossOrigin = await "anonymous";
+          img.src = await proxyUrl;
+
+          img.onload = await async function () {
+            const canvas = await document.createElement("canvas");
+            canvas.width = await img.width;
+            canvas.height = await img.height;
+
+            const ctx = await canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+
+            const imageURL = await canvas.toDataURL("image/png");
+
+            const link = await document.createElement("a");
+            link.href = await imageURL;
+            link.download = await filename;
+            await document.body.appendChild(link);
+            await link.click();
+            await document.body.removeChild(link);
+
+            e.innerText = await "Download";
+            await e.setAttribute("disable", false);
+          };
+
+          img.onerror = function () {
+            console.error("Error loading the image via proxy.");
+          };
+        } catch (error) {
+          console.error("Error during image download:", error);
+        }
+      }
     </script>
   </body>
 </html>
