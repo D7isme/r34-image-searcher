@@ -156,19 +156,19 @@
         localStorage.setItem("recentSearch", JSON.stringify([""]));
       } else {
         document.getElementById("searchTags").value =
-          JSON.parse(localStorage.getItem("recentSearch"))[0] || " ";
+          JSON.parse(localStorage.getItem("recentSearch"))[0] || "";
       }
 
       function setLocalstorage(tags) {
-        const recentSearch = JSON.parse(localStorage.getItem("recentSearch"));
+        const recentSearch = JSON.parse(localStorage.getItem("recentSearch"))|| [];
         if (tags && !recentSearch[0] != tags) {
-          recentSearch.unshift(tags || " ");
+          recentSearch.unshift(tags);
         }
         localStorage.setItem("recentSearch", JSON.stringify(recentSearch));
       }
 
       async function renderNew(
-        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || [" "],
+        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || "",
         numPage = 1,
         limit = 100,
         random = false
@@ -181,7 +181,7 @@
 
 
         const options = {
-          tags: [tags][0],
+          tags: tags,
           numPage: numPage,
           limit: limit, // limit per request, maximum 100
           remove_empty: true,
