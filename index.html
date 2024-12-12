@@ -168,7 +168,7 @@
       }
 
       async function renderNew(
-        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || " ",
+        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || [" "],
         numPage = 1,
         limit = 100,
         random = false
@@ -177,14 +177,20 @@
         contentElement.innerHTML = "";
         setLocalstorage(tags);
 
+        console.log(tags);
+
+
         const options = {
-          tags: [tags],
+          tags: [tags][0],
           numPage: numPage,
           limit: limit, // limit per request, maximum 100
           remove_empty: true,
           parse_tags: true, // whether to use tags
           random: random, // get random post
         };
+
+        console.log(options.tags);
+
         await nswfparse
           .r34(options)
           .then(async (payload) => {
@@ -311,8 +317,12 @@
         const searchVal = document.getElementById("searchTags").value;
         const searchLimit = document.getElementById("searchLimit").value;
         const pageNumber = document.getElementById("pageNumber").value;
+
+        let tagsArray = searchVal.split(/[, ]+/);
+        tagsArray = tagsArray.filter((tag) => tag !== "");
+
         renderNew(
-          (tags = searchVal),
+          (tags = tagsArray),
           (numPage = pageNumber),
           (limit = searchLimit),
           (random = false)
