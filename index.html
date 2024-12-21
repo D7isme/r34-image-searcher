@@ -76,7 +76,7 @@
         display: inline-block;
         color: black;
         padding: 10px;
-        font-weight: 600;
+        font-weight: 600; 
         font-size: 0.9rem;
         cursor: pointer;
         border: 2px solid black;
@@ -204,6 +204,9 @@
               Toastify({
                 text: "No posts found for the given tags!",
                 duration: 3000,
+                newWindow: true,
+                close: true,
+                stopOnFocus: true,
                 gravity: "top",
                 position: "right",
                 style: { background: "red" },
@@ -266,6 +269,9 @@
             Toastify({
               text: `Successfully fetched ${options.tags.join(", ")}`,
               duration: 3000,
+              newWindow: true,
+                close: true,
+                stopOnFocus: true,
               gravity: "top",
               position: "right",
               style: { background: "lightgreen" },
@@ -276,6 +282,9 @@
             Toastify({
               text: `Error: ${error.message}`,
               duration: 3000,
+              newWindow: true,
+                close: true,
+                stopOnFocus: true,
               gravity: "top",
               position: "right",
               style: { background: "red" },
