@@ -1,363 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hentai Images</title>
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
-    />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        background-color: #f4f4f4;
-      }
-
-      #content {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        padding: 20px;
-        justify-content: center;
-      }
-
-      .card {
-        background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        width: 300px;
-        text-align: center;
-      }
-
-      .card img {
-        width: 100%;
-        height: fit-content;
-      }
-
-      .card-body {
-        padding: 15px;
-      }
-
-      .card-title {
-        font-size: 1.2em;
-        margin: 10px 0;
-        font-weight: bold;
-      }
-
-      .card-description {
-        font-size: 0.9em;
-        color: #555;
-        margin: 10px 0;
-      }
-
-      .card-tags {
-        font-size: 0.8em;
-        color: #777;
-        margin-bottom: 10px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
-        height: 200px;
-        overflow-y: scroll;
-        overflow-x: hidden;
-        scrollbar-width: thin;
-      }
-      .card-tags span {
-        display: inline-block;
-        color: black;
-        padding: 10px;
-        font-weight: 600; 
-        font-size: 0.9rem;
-        cursor: pointer;
-        border: 2px solid black;
-        transition: all 0.1s ease;
-        border-radius: 10px;
-      }
-      .card-tags span:hover {
-        background: #000;
-        color: white;
-      }
-
-      .card-score {
-        font-size: 1.1em;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 10px;
-      }
-
-      #searchTags,
-      #searchLimit,
-      #pageNumber {
-        margin: 30px;
-        padding: 10px 19px;
-      }
-
-      .dv-container {
-        display: inline-flex !important;
-        justify-content: space-between;
-        align-items: center;
-        margin: 20px 0;
-        width: 100%;
-      }
-      .dv-container a {
-        padding: 10px 15px;
-        cursor: pointer;
-        border: 2px solid black;
-        display: inline-block;
-        text-decoration: none;
-      }
-    </style>
-  </head>
-  <body>
-    <form id="searchForm">
-      <input
-        type="search"
-        name="tagsSearch"
-        id="searchTags"
-        placeholder="Search tags"
-      />
-      <input
-        type="number"
-        name="searchLimit"
-        id="searchLimit"
-        placeholder="limits"
-        value="100"
-        style="width: 50px"
-      />
-      <input
-        type="number"
-        name="pageNumber"
-        id="pageNumber"
-        placeholder="pageNumber"
-        value="1"
-        style="width: 50px"
-      />
-      <button>Go</button>
-    </form>
-    <div id="content"></div>
-
-    <script
-      type="text/javascript"
-      src="https://cdn.jsdelivr.net/npm/toastify-js"
-    ></script>
-    <script src="https://unpkg.com/nswfparse/dist/nswfparse.js"></script>
-    <script defer>
-      if (!localStorage.getItem("recentSearch")) {
-        localStorage.setItem("recentSearch", JSON.stringify([""]));
-      } else {
-        document.getElementById("searchTags").value =
-          JSON.parse(localStorage.getItem("recentSearch"))[0] || "";
-      }
-
-      function setLocalstorage(tags) {
-        const recentSearch =
-          JSON.parse(localStorage.getItem("recentSearch")) || [];
-
-        // Convert tags to a string if it's an array.
-        const tagString = Array.isArray(tags) ? tags.join(" ") : tags;
-
-        // Avoid duplicates and only store unique searches.
-        if (tagString && recentSearch[0] !== tagString) {
-          recentSearch.unshift(tagString);
-        }
-
-        localStorage.setItem("recentSearch", JSON.stringify(recentSearch));
-      }
-
-      async function renderNew(
-        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || [""],
-        numPage = 1,
-        limit = 100,
-        random = false
-      ) {
-        const contentElement = document.getElementById("content");
-        contentElement.innerHTML = "";
-
-        // Convert the `tags` into an array if it's a string.
-        const tagsArray = typeof tags === "string" ? tags.split(" ") : tags;
-        console.log('setting local =', tagsArray);
-        setLocalstorage(tagsArray);
-
-        const options = {
-          tags: tagsArray, // Pass an array of tags.
-          numPage: numPage,
-          limit: limit,
-          remove_empty: true,
-          parse_tags: true,
-          random: random,
-        };
-
-        await nswfparse
-          .r34(options)
-          .then(async (payload) => {
-            if (!payload.posts) {
-              Toastify({
-                text: "No posts found for the given tags!",
-                duration: 3000,
-                newWindow: true,
-                close: true,
-                stopOnFocus: true,
-                gravity: "top",
-                position: "right",
-                style: { background: "red" },
-              }).showToast();
-              return;
-            }
-
-            payload && payload?.posts?.forEach((data) => {
-              const card = `<div class="card">
-          ${
-            data.file_url.endsWith("mp4")
-              ? `<video style="width:100%;" controls>
-                  <source src="${data.file_url}" type="video/mp4">
-                </video>`
-              : `<img src="${data.file_url}" alt="${data.md5}" />`
-          }
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Hentai Images</title><link
+rel="stylesheet"
+type="text/css"
+href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"/><style>body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;background-color:#f4f4f4}
+#content{display:flex;flex-wrap:wrap;gap:20px;padding:20px;justify-content:center}.card{background-color:white;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);overflow:hidden;width:300px;text-align:center}.card img{width:100%;height:fit-content}.card-body{padding:15px}.card-title{font-size:1.2em;margin:10px 0;font-weight:bold}.card-description{font-size:0.9em;color:#555;margin:10px 0}.card-tags{font-size:0.8em;color:#777;margin-bottom:10px;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;height:200px;overflow-y:scroll;overflow-x:hidden;scrollbar-width:thin}.card-tags span{display:inline-block;color:black;padding:10px;font-weight:600;font-size:0.9rem;cursor:pointer;border:2px solid black;transition:all 0.1s ease;border-radius:10px}.card-tags span:hover{background:#000;color:white}.card-score{font-size:1.1em;font-weight:bold;color:#333;margin-bottom:10px}
+#searchTags,#searchLimit,#pageNumber{margin:30px;padding:10px 19px}.dv-container{display:inline-flex!important;justify-content:space-between;align-items:center;margin:20px 0;width:100%}.dv-container a{padding:10px 15px;cursor:pointer;border:2px solid black;display:inline-block;text-decoration:none}</style></head><body><form id="searchForm"><input
+type="search"
+name="tagsSearch"
+id="searchTags"
+placeholder="Search tags"/><input
+type="number"
+name="searchLimit"
+id="searchLimit"
+placeholder="limits"
+value="100"
+style="width: 50px"/><input
+type="number"
+name="pageNumber"
+id="pageNumber"
+placeholder="pageNumber"
+value="1"
+style="width: 50px"/><button>Go</button></form><div id="content"></div><script
+type="text/javascript"
+src="https://cdn.jsdelivr.net/npm/toastify-js"></script><script src="https://unpkg.com/nswfparse/dist/nswfparse.js"></script><script defer>function setLocalstorage(e){let t=JSON.parse(localStorage.getItem("recentSearch"))||[],a=Array.isArray(e)?e.join(" "):e;a&&t[0]!==a&&t.unshift(a),localStorage.setItem("recentSearch",JSON.stringify(t))}async function renderNew(e=JSON.parse(localStorage.getItem("recentSearch"))[0]||[""],t=1,a=100,r=!1){let i=document.getElementById("content");i.innerHTML="";let n="string"==typeof e?e.split(" "):e;setLocalstorage(n);let o={tags:n,numPage:t,limit:a,remove_empty:!0,parse_tags:!0,random:r};await nswfparse.r34(o).then(async e=>{if(!e.posts){Toastify({text:"No posts found for the given tags!",duration:3e3,newWindow:!0,close:!0,stopOnFocus:!0,gravity:"top",position:"right",style:{background:"red"}}).showToast();return}e&&e?.posts?.forEach(e=>{let t=`<div class="card">
+          ${e.file_url.endsWith("mp4")?`<video style="width:100%;" controls><source src="${e.file_url}" type="video/mp4"></video>`:`<img src="${e.file_url}" alt="${e.md5}"/>`}
           <div class="card-body">
-            <div class="card-title">ID: ${data.id}</div>
-            <div class="card-description">Created At: ${new Date(
-              data.created_at
-            ).toLocaleString()}</div>
-            ${
-              data.source
-                ? `<a href="${data.source}" target="_blank">Source</a>`
-                : ""
-            }
+            <div class="card-title">ID: ${e.id}</div>
+            <div class="card-description">Created At: ${new Date(e.created_at).toLocaleString()}</div>
+            ${e.source?`<a href="${e.source}" target="_blank">Source</a>`:""}
             <div class="dv-container">
-              <a class="view-btn" href="${
-                data.file_url
-              }" target="_blank">View</a>
-              <a class="download-btn" data-url="${
-                data.file_url
-              }" data-disable="false">
+              <a class="view-btn" href="${e.file_url}" target="_blank">View</a>
+              <a class="download-btn" data-url="${e.file_url}" data-disable="false">
                 Download
               </a>
             </div>
             <div class="card-tags">
-              ${data.tags_parsed
-                .map((tag) => `<span class="tagNames">${tag}</span>`)
-                .join("")}
+              ${e.tags_parsed.map(e=>`<span class="tagNames">${e}</span>`).join("")}
             </div>
-            <div class="card-score">Score: ${data.score}</div>
+            <div class="card-score">Score: ${e.score}</div>
           </div>
-        </div>`;
-              contentElement.insertAdjacentHTML("beforeend", card);
-            });
-
-            document.querySelectorAll(".tagNames").forEach((tagElement) => {
-              tagElement.addEventListener("click", () => {
-                const tag = tagElement.innerText;
-                document.getElementById("searchTags").value = tag;
-                renderNew([tag], 1, 100, false);
-              });
-            });
-
-            document.querySelectorAll(".download-btn").forEach((btn) => {
-              btn.addEventListener("click", (e) => downloadImage(e.target));
-            });
-
-            Toastify({
-              text: `Successfully fetched ${options.tags.join(", ")}`,
-              duration: 3000,
-              newWindow: true,
-                close: true,
-                stopOnFocus: true,
-              gravity: "top",
-              position: "right",
-              style: { background: "lightgreen" },
-            }).showToast();
-          })
-          .catch((error) => {
-            console.error(error);
-            Toastify({
-              text: `Error: ${error.message}`,
-              duration: 3000,
-              newWindow: true,
-                close: true,
-                stopOnFocus: true,
-              gravity: "top",
-              position: "right",
-              style: { background: "red" },
-            }).showToast();
-          });
-      }
-
-      renderNew();
-
-      document.getElementById("searchForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        const searchVal = document.getElementById("searchTags").value;
-        const searchLimit = document.getElementById("searchLimit").value;
-        const pageNumber = document.getElementById("pageNumber").value;
-
-        let tagsArray = searchVal.split(/[, ]+/);
-        tagsArray = tagsArray.filter((tag) => tag !== "");
-        
-        renderNew(
-          (tags = tagsArray),
-          (numPage = pageNumber),
-          (limit = searchLimit),
-          (random = false)
-        );
-      });
-
-      async function downloadImage(e) {
-        try {
-          if (e.getAttribute("disable") == "true") {
-            return;
-          }
-          console.log(e.download);
-
-          const filename = await e.download;
-          e.setAttribute("disable", true);
-          e.innerText = "Loading...";
-
-          const proxyUrl =
-            await `https://api.allorigins.win/raw?url=${encodeURIComponent(
-              e.download
-            )}`;
-          const img = await new Image();
-          img.crossOrigin = await "anonymous";
-          img.src = await proxyUrl;
-
-          img.onload = await async function () {
-            const canvas = await document.createElement("canvas");
-            canvas.width = await img.width;
-            canvas.height = await img.height;
-
-            const ctx = await canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0);
-
-            const imageURL = await canvas.toDataURL("image/png");
-
-            const link = await document.createElement("a");
-            link.href = await imageURL;
-            link.download = await filename;
-            await document.body.appendChild(link);
-            await link.click();
-            await document.body.removeChild(link);
-
-            e.innerText = await "Download";
-            await e.setAttribute("disable", false);
-          };
-
-          img.onerror = function () {
-            console.error("Error loading the image via proxy.");
-          };
-        } catch (error) {
-          console.error("Error during image download:", error);
-        }
-      }
-    </script>
-  </body>
-</html>
+        </div>`;i.insertAdjacentHTML("beforeend",t)}),document.querySelectorAll(".tagNames").forEach(e=>{e.addEventListener("click",()=>{let t=e.innerText;document.getElementById("searchTags").value=t,renderNew([t],1,100,!1)})}),document.querySelectorAll(".download-btn").forEach(e=>{e.addEventListener("click",e=>downloadImage(e.target))}),Toastify({text:`Successfully fetched ${o.tags.join(", ")}`,duration:3e3,newWindow:!0,close:!0,stopOnFocus:!0,gravity:"top",position:"right",style:{background:"lightgreen"}}).showToast()}).catch(e=>{console.error(e),Toastify({text:`Error: ${e.message}`,duration:3e3,newWindow:!0,close:!0,stopOnFocus:!0,gravity:"top",position:"right",style:{background:"red"}}).showToast()})}async function downloadImage(e){try{if("true"==e.getAttribute("disable"))return;console.log(e.download);let t=await e.download;e.setAttribute("disable",!0),e.innerText="Loading...";let a=await `https://api.allorigins.win/raw?url=${encodeURIComponent(e.download)}`,r=await new Image;r.crossOrigin=await "anonymous",r.src=await a,r.onload=await async function(){let a=await document.createElement("canvas");a.width=await r.width,a.height=await r.height;let i=await a.getContext("2d");i.drawImage(r,0,0);let n=await a.toDataURL("image/png"),o=await document.createElement("a");o.href=await n,o.download=await t,await document.body.appendChild(o),await o.click(),await document.body.removeChild(o),e.innerText=await "Download",await e.setAttribute("disable",!1)},r.onerror=function(){console.error("Error loading the image via proxy.")}}catch(i){console.error("Error during image download:",i)}}localStorage.getItem("recentSearch")?document.getElementById("searchTags").value=JSON.parse(localStorage.getItem("recentSearch"))[0]||"":localStorage.setItem("recentSearch",JSON.stringify([""])),renderNew(),document.getElementById("searchForm").addEventListener("submit",e=>{e.preventDefault();let t=document.getElementById("searchTags").value,a=document.getElementById("searchLimit").value,r=document.getElementById("pageNumber").value,i=t.split(/[, ]+/);renderNew(tags=i=i.filter(e=>""!==e),numPage=r,limit=a,random=!1)});</script></body></html>
