@@ -77,10 +77,10 @@
         color: black;
         padding: 10px;
         font-weight: 600;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         cursor: pointer;
         border: 2px solid black;
-        transition: all 0.5s ease;
+        transition: all 0.1s ease;
         border-radius: 10px;
       }
       .card-tags span:hover {
@@ -160,152 +160,125 @@
       }
 
       function setLocalstorage(tags) {
-        const recentSearch = JSON.parse(localStorage.getItem("recentSearch"))|| [];
-        if (tags && !recentSearch[0] != tags) {
-          recentSearch.unshift(tags);
+        const recentSearch =
+          JSON.parse(localStorage.getItem("recentSearch")) || [];
+
+        // Convert tags to a string if it's an array.
+        const tagString = Array.isArray(tags) ? tags.join(" ") : tags;
+
+        // Avoid duplicates and only store unique searches.
+        if (tagString && recentSearch[0] !== tagString) {
+          recentSearch.unshift(tagString);
         }
+
         localStorage.setItem("recentSearch", JSON.stringify(recentSearch));
       }
 
       async function renderNew(
-        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || "",
+        tags = JSON.parse(localStorage.getItem("recentSearch"))[0] || [""],
         numPage = 1,
         limit = 100,
         random = false
       ) {
         const contentElement = document.getElementById("content");
         contentElement.innerHTML = "";
-        setLocalstorage(tags);
 
-        console.log(tags);
-
+        // Convert the `tags` into an array if it's a string.
+        const tagsArray = typeof tags === "string" ? tags.split(" ") : tags;
+        console.log('setting local =', tagsArray);
+        setLocalstorage(tagsArray);
 
         const options = {
-          tags: tags,
+          tags: tagsArray, // Pass an array of tags.
           numPage: numPage,
-          limit: limit, // limit per request, maximum 100
+          limit: limit,
           remove_empty: true,
-          parse_tags: true, // whether to use tags
-          random: random, // get random post
+          parse_tags: true,
+          random: random,
         };
-
-        console.log(options.tags);
 
         await nswfparse
           .r34(options)
           .then(async (payload) => {
-            console.log("pay", payload);
-            let tostifyMsg = `successfully fetched r34 ${options.tags.join(
-              ", "
-            )}`;
-            let tostifyBg = "light";
             if (!payload.posts) {
-              tostifyMsg = "404 r34";
-              tostifyBg = "red";
-
-              renderNew(
-                (tags = [""]),
-                (numPage = 1),
-                (limit = 100),
-                (random = false)
-              );
+              Toastify({
+                text: "No posts found for the given tags!",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: { background: "red" },
+              }).showToast();
+              return;
             }
 
-            await payload?.posts?.map((data, key) => {
+            payload && payload?.posts?.forEach((data) => {
               const card = `<div class="card">
-  ${
-    data.file_url[data.file_url.length - 1] != "4"
-      ? `<img 
-    src="${data.file_url}" 
-    alt="${data.md5}" 
-  />`
-      : `<video style="width:100%;" controls>
-        <source src="${data.file_url}" type="video/mp4">
-        </video>`
-  }
-  <div class="card-body">
-    <div class="card-title">ID: ${data.id}</div>
-    <div class="card-description">Created At: ${new Date(
-      data.created_at
-    ).toLocaleString()}</div>
-    ${
-      data.source.length > 0
-        ? `<a href="${data.source}" target="_blank">Source</a>`
-        : ""
-    }
-    <div class="dv-container">
-    <a 
-      class="view-btn"
-      href="${data.file_url}"
-      target="_blank"
-    >View</a>
-    <a 
-      class="download-btn"
-      download="${data.file_url}"
-      onclick="downloadImage(this)"
-      disable="false"
-    >
-      Download
-    </a></div>
-    <div class="card-tags">
-      <span class="tagNames">hi</span>
-      ${data.tags_parsed
-        .map((d, i) => `<span class="tagNames">${d}</span>`)
-        .join(" ")}
-    </div>
-    <div class="card-score">Score: ${data.score}</div>
-  </div>
-</div>
-`;
-              contentElement.insertAdjacentHTML("beforeEnd", card);
+          ${
+            data.file_url.endsWith("mp4")
+              ? `<video style="width:100%;" controls>
+                  <source src="${data.file_url}" type="video/mp4">
+                </video>`
+              : `<img src="${data.file_url}" alt="${data.md5}" />`
+          }
+          <div class="card-body">
+            <div class="card-title">ID: ${data.id}</div>
+            <div class="card-description">Created At: ${new Date(
+              data.created_at
+            ).toLocaleString()}</div>
+            ${
+              data.source
+                ? `<a href="${data.source}" target="_blank">Source</a>`
+                : ""
+            }
+            <div class="dv-container">
+              <a class="view-btn" href="${
+                data.file_url
+              }" target="_blank">View</a>
+              <a class="download-btn" data-url="${
+                data.file_url
+              }" data-disable="false">
+                Download
+              </a>
+            </div>
+            <div class="card-tags">
+              ${data.tags_parsed
+                .map((tag) => `<span class="tagNames">${tag}</span>`)
+                .join("")}
+            </div>
+            <div class="card-score">Score: ${data.score}</div>
+          </div>
+        </div>`;
+              contentElement.insertAdjacentHTML("beforeend", card);
             });
 
-            document.querySelectorAll("span").forEach((e) => {
-              e.addEventListener("click", () => {
-                console.log(e.innerHTML);
-
-                document.getElementById("searchTags").value = e.innerHTML;
-                document.getElementById("searchLimit").value = 1;
-                document.getElementById("pageNumber").value = 100;
-
-                renderNew(
-                  (tags = e.innerHTML),
-                  (numPage = 1),
-                  (limit = 100),
-                  (random = false)
-                );
+            document.querySelectorAll(".tagNames").forEach((tagElement) => {
+              tagElement.addEventListener("click", () => {
+                const tag = tagElement.innerText;
+                document.getElementById("searchTags").value = tag;
+                renderNew([tag], 1, 100, false);
               });
             });
 
+            document.querySelectorAll(".download-btn").forEach((btn) => {
+              btn.addEventListener("click", (e) => downloadImage(e.target));
+            });
+
             Toastify({
-              text: tostifyMsg,
+              text: `Successfully fetched ${options.tags.join(", ")}`,
               duration: 3000,
-              newWindow: true,
-              close: true,
-              gravity: "top", // `top` or `bottom`
-              position: "right", // `left`, `center` or `right`
-              stopOnFocus: true, // Prevents dismissing of toast on hover
-              style: {
-                background: tostifyBg,
-              },
-              onClick: function () {}, // Callback after click
+              gravity: "top",
+              position: "right",
+              style: { background: "lightgreen" },
             }).showToast();
           })
           .catch((error) => {
             console.error(error);
-
             Toastify({
-              text: error,
+              text: `Error: ${error.message}`,
               duration: 3000,
-              newWindow: true,
-              close: true,
-              gravity: "top", // `top` or `bottom`
-              position: "right", // `left`, `center` or `right`
-              stopOnFocus: true, // Prevents dismissing of toast on hover
-              style: {
-                background: "red",
-              },
-              onClick: function () {}, // Callback after click
+              gravity: "top",
+              position: "right",
+              style: { background: "red" },
             }).showToast();
           });
       }
@@ -320,7 +293,7 @@
 
         let tagsArray = searchVal.split(/[, ]+/);
         tagsArray = tagsArray.filter((tag) => tag !== "");
-
+        
         renderNew(
           (tags = tagsArray),
           (numPage = pageNumber),
